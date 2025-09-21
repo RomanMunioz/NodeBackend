@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const mysql = require('mysql2'); // Importa la biblioteca de MySQL
 
 const app = express();
-const PORT = 9090; // Use the same port as in your frontend's api.ts
+const PORT = process.env.PORT || 9090; // Use the same port as in your frontend's api.ts
 
 // Enable CORS and JSON parsing
 app.use(cors());
