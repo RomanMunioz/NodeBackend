@@ -12,6 +12,14 @@ const PORT = 9090; // Use the same port as in your frontend's api.ts
 app.use(cors());
 app.use(express.json());
 
+// Configura la conexión a la base de datos
+const db = mysql.createPool({
+  host: 'bwu90zck6cbccdzsgwfh-mysql.services.clever-cloud.com',      // O la URL de tu base de datos en la nube
+  user: 'uu23avzmicvruyjm',     // Tu nombre de usuario de MySQL
+  password: 'WLSFsFJTmd1EwGwEbbLM', // Tu contraseña de MySQL
+  database: 'bwu90zck6cbccdzsgwfh' // El nombre de la base de datos que creaste
+});
+
 // A simple in-memory "database" to hold your products
 let products = [
   {
