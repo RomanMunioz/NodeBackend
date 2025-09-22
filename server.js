@@ -1,4 +1,4 @@
-// backend/server.js
+// backend/server.js - VERSIÓN CORREGIDA
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
@@ -7,12 +7,13 @@ const mysql = require('mysql2');
 const app = express();
 const PORT = process.env.PORT || 9090;
 
-// ✅ CORS configurado correctamente
+// CORS configurado correctamente
 app.use(cors({
   origin: [
     'https://RomanMunioz.github.io',
-    'http://localhost:3000', // Para desarrollo local
-    'http://localhost:5173'  // Para Vite
+    'https://romanmunioz.github.io', // Minúsculas también
+    'http://localhost:3000',
+    'http://localhost:5173'
   ],
   credentials: true
 }));
@@ -66,9 +67,29 @@ let products = [
 
 let users = [];
 
-// ✅ Ruta de salud del servidor
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Inventory API is running!',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      products: '/products',
+      categories: '/products/categories',
+      users: '/users'
+    }
+  });
+});
+
+// Ruta de salud del servidor
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+  console.log('Health check requested');
+  res.json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // --- Product Routes ---
@@ -77,21 +98,17 @@ app.get('/products', (req, res) => {
   res.json(products);
 });
 
-// ✅ Nueva ruta: Obtener producto por ID
-app.get('/products/:id', (req, res) => {
-  const { id } = req.params;
-  const product = products.find(p => p.id === id);
-  
-  if (!product) {
-    return res.status(404).json({ message: 'Product not found' });
-  }
-  
-  res.json(product);
+// Obtener categorías únicas
+app.get('/products/categories', (req, res) => {
+  console.log('GET /products/categories called');
+  const categories = [...new Set(products.map(p => p.category))];
+  res.json(categories);
 });
 
-// ✅ Nueva ruta: Buscar productos
+// Buscar productos (DEBE ir antes de /products/:id)
 app.get('/products/search', (req, res) => {
   const { q } = req.query;
+  console.log('Search query:', q);
   
   if (!q) {
     return res.json(products);
@@ -106,11 +123,16 @@ app.get('/products/search', (req, res) => {
   res.json(searchResults);
 });
 
-// ✅ Nueva ruta: Obtener categorías únicas
-app.get('/products/categories', (req, res) => {
-  console.log('GET /products/categories called');
-  const categories = [...new Set(products.map(p => p.category))];
-  res.json(categories);
+// Obtener producto por ID
+app.get('/products/:id', (req, res) => {
+  const { id } = req.params;
+  const product = products.find(p => p.id === id);
+  
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
+  }
+  
+  res.json(product);
 });
 
 app.post('/products', (req, res) => {
@@ -155,22 +177,11 @@ app.delete('/products/:id', (req, res) => {
 
 // --- User Routes ---
 app.get('/users', (req, res) => {
+  console.log('GET /users called');
   res.json(users);
 });
 
-// ✅ Nueva ruta: Obtener usuario por ID
-app.get('/users/:id', (req, res) => {
-  const { id } = req.params;
-  const user = users.find(u => u.id === parseInt(id));
-  
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-  
-  res.json(user);
-});
-
-// ✅ Nueva ruta: Buscar usuarios
+// Buscar usuarios (DEBE ir antes de /users/:id)
 app.get('/users/search', (req, res) => {
   const { q } = req.query;
   
@@ -186,7 +197,19 @@ app.get('/users/search', (req, res) => {
   res.json(searchResults);
 });
 
-// ✅ Crear usuario
+// Obtener usuario por ID
+app.get('/users/:id', (req, res) => {
+  const { id } = req.params;
+  const user = users.find(u => u.id === parseInt(id));
+  
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  
+  res.json(user);
+});
+
+// Crear usuario
 app.post('/users', (req, res) => {
   const newUser = {
     id: users.length + 1,
@@ -198,7 +221,7 @@ app.post('/users', (req, res) => {
   res.status(201).json(newUser);
 });
 
-// ✅ Actualizar usuario
+// Actualizar usuario
 app.put('/users/:id', (req, res) => {
   const { id } = req.params;
   const userIndex = users.findIndex(u => u.id === parseInt(id));
@@ -215,7 +238,7 @@ app.put('/users/:id', (req, res) => {
   res.json(updatedUser);
 });
 
-// ✅ Eliminar usuario
+// Eliminar usuario
 app.delete('/users/:id', (req, res) => {
   const { id } = req.params;
   const initialLength = users.length;
@@ -228,32 +251,45 @@ app.delete('/users/:id', (req, res) => {
   res.status(204).send();
 });
 
-// ✅ Middleware para rutas no encontradas
-app.use('*', (req, res) => {
-  console.log(`Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ 
-    message: 'Route not found',
-    method: req.method,
-    url: req.originalUrl
-  });
+// 404 para rutas no definidas
+app.all("/*", (req, res) => {
+  res.status(404).json({ message: "Ruta no encontrada" });
 });
 
-// ✅ Middleware de manejo de errores
+
+// Middleware de manejo de errores
 app.use((error, req, res, next) => {
   console.error('Server error:', error);
   res.status(500).json({ 
     message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
-  console.log('Available routes:');
-  console.log('- GET /health');
-  console.log('- GET /products');
-  console.log('- GET /products/categories');
-  console.log('- GET /products/search?q=query');
-  console.log('- GET /users');
-  console.log('- GET /users/search?q=query');
+app.listen(PORT, '0.0.0.0', (err) => {
+  if (err) {
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
+  }
+  
+  console.log(`✅ Backend server is running on port ${PORT}`);
+  console.log('📍 Available endpoints:');
+  console.log('   - GET /health');
+  console.log('   - GET /products');
+  console.log('   - GET /products/categories');
+  console.log('   - GET /products/search?q=query');
+  console.log('   - GET /users');
+  console.log('   - GET /users/search?q=query');
+  console.log('🚀 Server started successfully!');
+});
+
+// Manejo de errores no capturados
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
