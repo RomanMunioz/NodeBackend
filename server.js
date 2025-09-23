@@ -21,11 +21,15 @@ app.use(cors({
 app.use(express.json());
 
 // Configura la conexión a la base de datos
+// 🔹 Pool con límite bajo para Clever
 const db = mysql.createPool({
   host: 'bwu90zck6cbccdzsgwfh-mysql.services.clever-cloud.com',
   user: 'uu23avzmicvruyjm',
   password: 'WLSFsFJTmd1EwGwEbbLM',
-  database: 'bwu90zck6cbccdzsgwfh'
+  database: 'bwu90zck6cbccdzsgwfh',
+  waitForConnections: true,
+  connectionLimit: 5, // ⚠️ igual al límite de Clever
+  queueLimit: 0
 });
 
 // In-memory database
