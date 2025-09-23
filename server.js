@@ -65,6 +65,38 @@ let products = [
   }
 ];
 
+const seedProducts = () => {
+  products.forEach(product => {
+    db.query(
+      `INSERT INTO products (id, name, description, quantity, price, category, minStock, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE id=id`, // evita error si ya existe
+      [
+        product.id,
+        product.name,
+        product.description,
+        product.quantity,
+        product.price,
+        product.category,
+        product.minStock,
+        new Date(),
+        new Date()
+      ],
+      (err, result) => {
+        if (err) {
+          console.error('❌ Error insertando producto:', err);
+        } else {
+          console.log(`✅ Producto insertado: ${product.name}`);
+        }
+      }
+    );
+  });
+};
+
+// Ejecutar semilla una vez cuando arranca el servidor
+seedProducts();
+
+
 let users = [];
 
 // Ruta raíz
