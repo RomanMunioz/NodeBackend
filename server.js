@@ -125,16 +125,26 @@ app.get('/health', (req, res) => {
 });
 
 // --- Product Routes ---
+// Obtener todos los productos
 app.get('/products', (req, res) => {
-  console.log('GET /products called');
-  res.json(products);
+  db.query('SELECT * FROM products', (err, results) => {
+    if (err) {
+      console.error('❌ Error al obtener productos:', err);
+      return res.status(500).json({ message: 'Error al obtener productos' });
+    }
+    res.json(results);
+  });
 });
 
 // Obtener categorías únicas
 app.get('/products/categories', (req, res) => {
-  console.log('GET /products/categories called');
-  const categories = [...new Set(products.map(p => p.category))];
-  res.json(categories);
+  db.query('SELECT DISTINCT category FROM products', (err, results) => {
+    if (err) {
+      console.error('❌ Error al obtener categorías:', err);
+      return res.status(500).json({ message: 'Error al obtener categorías' });
+    }
+    res.json(results.map(r => r.category));
+  });
 });
 
 // Buscar productos (DEBE ir antes de /products/:id)
