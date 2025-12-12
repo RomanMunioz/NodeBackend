@@ -60,113 +60,97 @@ app.get('/health', (req, res) => {
   });
 });
 
-// --- Product Routes ---
-// Obtener todos los productos
+// ---- PRODUCT ROUTES (FULL MYSQL MODE) ----
+
+// Get all products
 app.get("/products", (req, res) => {
   db.query("SELECT * FROM products", (err, results) => {
-    if (err) {
-      console.error("Error fetching products:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
+    if (err) return res.status(500).json({ error: "Database error" });
     res.json(results);
   });
 });
 
-// Obtener categorías únicas
-app.get('/products/categories', (req, res) => {
-  db.query('SELECT DISTINCT category FROM products', (err, results) => {
-    if (err) {
-      console.error('❌ Error al obtener categorías:', err);
-      return res.status(500).json({ message: 'Error al obtener categorías' });
-    }
+// Get unique categories
+app.get("/products/categories", (req, res) => {
+  db.query("SELECT DISTINCT category FROM products", (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
     res.json(results.map(r => r.category));
   });
 });
 
-// Buscar productos (DEBE ir antes de /products/:id)
-app.get('/products/search', (req, res) => {
-  const { q } = req.query;
-  console.log('Search query:', q);
-  
-  if (!q) {
-    return res.json(products);
-  }
-  
-  const searchResults = products.filter(product => 
-    product.name.toLowerCase().includes(q.toLowerCase()) ||
-    product.description.toLowerCase().includes(q.toLowerCase()) ||
-    product.category.toLowerCase().includes(q.toLowerCase())
-  );
-  
-  res.json(searchResults);
-});
-
-// Obtener producto por ID
-app.get('/products/:id', (req, res) => {
-  const { id } = req.params;
-  const product = products.find(p => p.id === id);
-  
-  if (!product) {
-    return res.status(404).json({ message: 'Product not found' });
-  }
-  
-  res.json(product);
-});
-
-app.post("/products", (req, res) => {
-  const { name, description, quantity, price, category, minStock } = req.body;
-
-  const newProduct = {
-    name,
-    description,
-    quantity,
-    price,
-    category,
-    minStock
-  };
-
-  db.query("INSERT INTO products SET ?", newProduct, (err, result) => {
-    if (err) {
-      console.error("Error inserting product:", err);
-      return res.status(500).json({ error: "Error creating product" });
+// Search products
+app.get("/products/search", (req, res) => {
+  const q = req.query.q || "";
+  db.query(
+    `SELECT * FROM products 
+     WHERE name LIKE ? 
+     OR description LIKE ?
+     OR category LIKE ?`,
+    [`%${q}%`, `%${q}%`, `%${q}%`],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      res.json(results);
     }
+  );
+});
 
-    res.status(201).json({
-      id: result.insertId,
-      ...newProduct
-    });
+// Get product by ID
+app.get("/products/:id", (req, res) => {
+  db.query(
+    "SELECT * FROM products WHERE id = ?",
+    [req.params.id],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      if (results.length === 0)
+        return res.status(404).json({ error: "Product not found" });
+      res.json(results[0]);
+    }
+  );
+});
+
+// Create product
+app.post("/products", (req, res) => {
+  const product = req.body;
+
+  db.query("INSERT INTO products SET ?", product, (err, result) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+
+    res.status(201).json({ id: result.insertId, ...product });
   });
 });
 
+// Update product
+app.put("/products/:id", (req, res) => {
+  db.query(
+    "UPDATE products SET ? WHERE id = ?",
+    [req.body, req.params.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: "DB error" });
 
-app.put('/products/:id', (req, res) => {
-  const { id } = req.params;
-  const productIndex = products.findIndex(p => p.id === id);
-  
-  if (productIndex === -1) {
-    return res.status(404).json({ message: 'Product not found' });
-  }
-  
-  const updatedProduct = {
-    ...products[productIndex],
-    ...req.body,
-    updatedAt: new Date().toISOString(),
-  };
-  products[productIndex] = updatedProduct;
-  res.json(updatedProduct);
+      if (result.affectedRows === 0)
+        return res.status(404).json({ error: "Product not found" });
+
+      res.json({ id: req.params.id, ...req.body });
+    }
+  );
 });
 
-app.delete('/products/:id', (req, res) => {
-  const { id } = req.params;
-  const initialLength = products.length;
-  products = products.filter(p => p.id !== id);
-  
-  if (products.length === initialLength) {
-    return res.status(404).json({ message: 'Product not found' });
-  }
-  
-  res.status(204).send();
+// Delete product
+app.delete("/products/:id", (req, res) => {
+  db.query(
+    "DELETE FROM products WHERE id = ?",
+    [req.params.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: "DB error" });
+
+      if (result.affectedRows === 0)
+        return res.status(404).json({ error: "Product not found" });
+
+      res.status(204).send();
+    }
+  );
 });
+
 
 // --- User Routes ---
 app.get('/users', (req, res) => {
