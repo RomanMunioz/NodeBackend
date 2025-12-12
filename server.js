@@ -1,8 +1,9 @@
 // backend/server.js - VERSIÓN CORREGIDA
-const express = require('express');
-const cors = require('cors');
-const { v4: uuidv4 } = require('uuid');
-const mysql = require('mysql2');
+import express from "express";
+import cors from "cors";
+import { v4 as uuidv4 } from "uuid";
+
+import mysql from 'mysql2'; // LÍNEA MODERNA (ES MODULES)
 
 const app = express();
 const PORT = process.env.PORT || 9090;
@@ -32,42 +33,6 @@ const db = mysql.createPool({
   queueLimit: 0
 });
 
-// In-memory database
-let products = [
-  {
-    id: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-    name: "Laptop",
-    description: "High-performance laptop for professional use.",
-    quantity: 50,
-    price: 1200.00,
-    category: "Electronics",
-    minStock: 10,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "b1c2d3e4-f5a6-7890-1234-567890abcdef",
-    name: "Smartphone",
-    description: "Latest model with a high-resolution camera.",
-    quantity: 200,
-    price: 800.00,
-    category: "Electronics",
-    minStock: 25,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "c1d2e3f4-g5h6-7890-1234-567890abcdef",
-    name: "Coffee Mug",
-    description: "Ceramic mug for your morning coffee.",
-    quantity: 500,
-    price: 15.00,
-    category: "Home Goods",
-    minStock: 50,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
 
 const seedProducts = () => {
   products.forEach(product => {
@@ -130,11 +95,11 @@ app.get('/health', (req, res) => {
 
 // --- Product Routes ---
 // Obtener todos los productos
-app.get('/products', (req, res) => {
-  db.query('SELECT * FROM products', (err, results) => {
+app.get("/products", (req, res) => {
+  db.query("SELECT * FROM products", (err, results) => {
     if (err) {
-      console.error('❌ Error al obtener productos:', err);
-      return res.status(500).json({ message: 'Error al obtener productos' });
+      console.error("Error fetching products:", err);
+      return res.status(500).json({ error: "Database error" });
     }
     res.json(results);
   });
@@ -181,16 +146,31 @@ app.get('/products/:id', (req, res) => {
   res.json(product);
 });
 
-app.post('/products', (req, res) => {
+app.post("/products", (req, res) => {
+  const { name, description, quantity, price, category, minStock } = req.body;
+
   const newProduct = {
-    id: uuidv4(),
-    ...req.body,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    name,
+    description,
+    quantity,
+    price,
+    category,
+    minStock
   };
-  products.push(newProduct);
-  res.status(201).json(newProduct);
+
+  db.query("INSERT INTO products SET ?", newProduct, (err, result) => {
+    if (err) {
+      console.error("Error inserting product:", err);
+      return res.status(500).json({ error: "Error creating product" });
+    }
+
+    res.status(201).json({
+      id: result.insertId,
+      ...newProduct
+    });
+  });
 });
+
 
 app.put('/products/:id', (req, res) => {
   const { id } = req.params;
