@@ -4,7 +4,7 @@ import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
 
 import mysql from 'mysql2'; // LÍNEA MODERNA (ES MODULES)
-import userRoutes from "./routes/user.routes.js";
+import userRoutes from "./routes/userRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 
 app.use("/products", productRoutes);
