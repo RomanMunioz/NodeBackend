@@ -4,6 +4,12 @@ import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
 
 import mysql from 'mysql2'; // LÍNEA MODERNA (ES MODULES)
+import userRoutes from "./routes/user.routes.js";
+import productRoutes from "./routes/productRoutes.js";
+
+app.use("/products", productRoutes);
+
+
 
 const app = express();
 const PORT = process.env.PORT || 9090;
@@ -19,6 +25,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use("/users", userRoutes);
 
 // Configura la conexión a la base de datos
 // 🔹 Pool con límite bajo para Clever
