@@ -6,7 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 import mysql from 'mysql2'; // LÍNEA MODERNA (ES MODULES)
 import userRoutes from "./routes/userRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
-
+import productController from "./controllers/productController.js";
+import userController from "./controllers/userController.js";
 app.use("/products", productRoutes);
 
 
