@@ -1,4 +1,4 @@
-import db from "/db.js";
+import db from "../db.js";
 
 // Obtener todos los usuarios
 export const getUsers = async (req, res) => {
