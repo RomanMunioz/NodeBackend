@@ -1,5 +1,6 @@
 import db from "../db.js";
 
+console.log(data);
 /* GET /products */
 export const getAllProducts = async (req, res) => {
   try {
@@ -106,9 +107,10 @@ export const searchProducts = async (req, res) => {
 export const getCategories = async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT DISTINCT category FROM products WHERE category IS NOT NULL"
-    );
-    res.json(rows.map(r => r.category));
+  "SELECT DISTINCT categories FROM products WHERE categories IS NOT NULL"
+);
+
+res.json(rows.map(r => r.categories));
   } catch (error) {
     res.status(500).json({ message: "Error getting categories" });
   }
