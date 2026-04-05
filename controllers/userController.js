@@ -3,7 +3,7 @@ import db from "../db.js";
 // Obtener todos los usuarios
 export const getUsers = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM users");
+    const [rows] = await db.query("SELECT * FROM users");
     res.json(rows);
   } catch (error) {
     console.error(error);
@@ -14,7 +14,7 @@ export const getUsers = async (req, res) => {
 // Obtener un usuario por ID
 export const getUserById = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM users WHERE id = ?", [
+    const [rows] = await db.query("SELECT * FROM users WHERE id = ?", [
       req.params.id,
     ]);
 
@@ -34,7 +34,7 @@ export const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const [result] = await pool.query(
+    const [result] = await db.query(
       "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
       [name, email, password]
     );
@@ -51,7 +51,7 @@ export const updateUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const [result] = await pool.query(
+    const [result] = await db.query(
       `UPDATE users SET
         name = IFNULL(?, name),
         email = IFNULL(?, email),
@@ -74,7 +74,7 @@ export const updateUser = async (req, res) => {
 // Eliminar usuario
 export const deleteUser = async (req, res) => {
   try {
-    const [result] = await pool.query("DELETE FROM users WHERE id = ?", [
+    const [result] = await db.query("DELETE FROM users WHERE id = ?", [
       req.params.id,
     ]);
 

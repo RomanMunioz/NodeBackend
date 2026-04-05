@@ -1,6 +1,4 @@
 import db from "../db.js";
-
-console.log(data);
 /* GET /products */
 export const getAllProducts = async (req, res) => {
   try {
@@ -64,12 +62,16 @@ export const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { name, description, quantity, price, category, minStock } = req.body;
 
-    await db.query(
+    const [result] = await db.query(
       `UPDATE products 
        SET name=?, description=?, quantity=?, price=?, category=?, minStock=?
        WHERE id=?`,
       [name, description, quantity, price, category, minStock, id]
     );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
     res.json({ message: "Product updated" });
   } catch (error) {
@@ -81,7 +83,12 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    await db.query("DELETE FROM products WHERE id = ?", [id]);
+    const [result] = await db.query("DELETE FROM products WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
     res.json({ message: "Product deleted" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting product" });
@@ -91,11 +98,11 @@ export const deleteProduct = async (req, res) => {
 /* GET /products/search?q= */
 export const searchProducts = async (req, res) => {
   try {
-    const { q } = req.query;
+    const q = req.query.q || "";
     const [rows] = await db.query(
       `SELECT * FROM products 
-       WHERE name LIKE ? OR description LIKE ?`,
-      [`%${q}%`, `%${q}%`]
+       WHERE name LIKE ? OR description LIKE ? OR category LIKE ?`,
+      [`%${q}%`, `%${q}%`, `%${q}%`]
     );
     res.json(rows);
   } catch (error) {
@@ -107,10 +114,9 @@ export const searchProducts = async (req, res) => {
 export const getCategories = async (req, res) => {
   try {
     const [rows] = await db.query(
-  "SELECT DISTINCT categories FROM products WHERE categories IS NOT NULL"
-);
-
-res.json(rows.map(r => r.categories));
+      "SELECT DISTINCT category FROM products WHERE category IS NOT NULL"
+    );
+    res.json(rows.map((r) => r.category));
   } catch (error) {
     res.status(500).json({ message: "Error getting categories" });
   }
