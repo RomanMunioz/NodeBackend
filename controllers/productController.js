@@ -114,10 +114,12 @@ export const searchProducts = async (req, res) => {
 export const getCategories = async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT DISTINCT category FROM products WHERE category IS NOT NULL"
+      "SELECT DISTINCT categories FROM products WHERE categories IS NOT NULL"
     );
+
     res.json(rows.map((r) => r.categories));
   } catch (error) {
+    console.error("CATEGORIES ERROR:", error); // 👈 MUY IMPORTANTE
     res.status(500).json({ message: "Error getting categories" });
   }
 };
