@@ -32,13 +32,13 @@ export const getProductById = async (req, res) => {
 /* POST /products */
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, quantity, price, category, minStock } = req.body;
+    const { name, description, quantity, price, categories, minStock } = req.body;
 
     const [result] = await db.query(
       `INSERT INTO products 
-       (name, description, quantity, price, category, minStock)
+       (name, description, quantity, price, categories, minStock)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [name, description, quantity, price, category, minStock]
+      [name, description, quantity, price, categories, minStock]
     );
 
     res.status(201).json({
@@ -47,7 +47,7 @@ export const createProduct = async (req, res) => {
       description,
       quantity,
       price,
-      category,
+      categories,
       minStock,
     });
   } catch (error) {
@@ -60,11 +60,11 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, quantity, price, category, minStock } = req.body;
+    const { name, description, quantity, price, categories, minStock } = req.body;
 
     const [result] = await db.query(
       `UPDATE products 
-       SET name=?, description=?, quantity=?, price=?, category=?, minStock=?
+       SET name=?, description=?, quantity=?, price=?, categories=?, minStock=?
        WHERE id=?`,
       [name, description, quantity, price, category, minStock, id]
     );
@@ -116,7 +116,7 @@ export const getCategories = async (req, res) => {
     const [rows] = await db.query(
       "SELECT DISTINCT category FROM products WHERE category IS NOT NULL"
     );
-    res.json(rows.map((r) => r.category));
+    res.json(rows.map((r) => r.categories));
   } catch (error) {
     res.status(500).json({ message: "Error getting categories" });
   }
