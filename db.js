@@ -11,5 +11,10 @@ const pool = mysql.createPool({
     rejectUnauthorized: false,
   },
 });
+console.log("HOST:", process.env.MYSQL_ADDON_HOST);
+console.log("USER:", process.env.MYSQL_ADDON_USER);
+console.log("DB:", process.env.MYSQL_ADDON_DB); 
+console.log("PORT:", process.env.MYSQL_ADDON_PORT);
+
 export default pool;
 
