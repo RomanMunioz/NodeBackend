@@ -71,7 +71,7 @@ export const updateProduct = async (req, res) => {
       `UPDATE products 
        SET name=?, description=?, quantity=?, price=?, categories=?, minStock=?
        WHERE id=?`,
-      [name, description, quantity, price, category, minStock, id]
+      [name, description, quantity, price, categories, minStock, id]
     );
 
     if (result.affectedRows === 0) {
