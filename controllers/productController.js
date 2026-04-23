@@ -1,4 +1,5 @@
 import db from "../db.js";
+import { v4 as uuidv4 } from "uuid";
 /* GET /products */
 export const getAllProducts = async (req, res) => {
   try {
@@ -32,17 +33,21 @@ export const getProductById = async (req, res) => {
 /* POST /products */
 export const createProduct = async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+
     const { name, description, quantity, price, categories, minStock } = req.body;
 
-    const [result] = await db.query(
+    const id = uuidv4(); // 👈 CLAVE
+
+    await db.query(
       `INSERT INTO products 
-       (name, description, quantity, price, categories, minStock)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [name, description, quantity, price, categories, minStock]
+       (id, name, description, quantity, price, categories, minStock)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, name, description, quantity, price, categories, minStock]
     );
 
     res.status(201).json({
-      id: result.insertId,
+      id,
       name,
       description,
       quantity,
@@ -51,7 +56,7 @@ export const createProduct = async (req, res) => {
       minStock,
     });
   } catch (error) {
-    console.error(error);
+    console.error("CREATE ERROR:", error); // 👈 esto ahora sí nos dice TODO
     res.status(500).json({ message: "Error creating product" });
   }
 };
@@ -101,7 +106,7 @@ export const searchProducts = async (req, res) => {
     const q = req.query.q || "";
     const [rows] = await db.query(
       `SELECT * FROM products 
-       WHERE name LIKE ? OR description LIKE ? OR category LIKE ?`,
+       WHERE name LIKE ? OR description LIKE ? OR categories LIKE ?`,
       [`%${q}%`, `%${q}%`, `%${q}%`]
     );
     res.json(rows);
